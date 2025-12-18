@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABC Auto Advisor - Document Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Excel-like Table Styling */
+        .excel-table th {
+            background-color: #f3f4f6;
+            color: #374151;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border: 1px solid #e5e7eb;
+            padding: 8px 12px;
+            white-space: nowrap;
+        }
+        .excel-table td {
+            border: 1px solid #e5e7eb;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        /* Inline Edit Simulation */
+        .excel-table td:hover {
+            border: 1px solid #3b82f6;
+            cursor: cell;
+        }
+
+        .excel-table td input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: inherit;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Status Colors per requirements */
+        .row-expired { background-color: #fee2e2 !important; } /* Red-100 */
+        .row-expiring-soon { background-color: #fef9c3 !important; } /* Yellow-100 */
+        .cell-na { color: #9ca3af; font-style: italic; }
+        
+        /* Sticky Column for Checkbox and Actions */
+        .sticky-col-left {
+            position: sticky;
+            left: 0;
+            background-color: inherit;
+            z-index: 10;
+        }
+        .sticky-col-left-2 {
+            position: sticky;
+            left: 35px;
+            background-color: inherit;
+            z-index: 10;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8; 
+        }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-xl z-20 flex-shrink-0">
+        <div class="h-16 flex items-center px-6 border-b border-slate-700">
+            <i class="fa-solid fa-car-side text-blue-400 mr-3 text-xl"></i>
+            <span class="font-bold text-lg tracking-wide">Auto Advisor</span>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4">
+            
+            <div class="px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Main</div>
+            <a href="#" class="flex items-center px-6 py-3 bg-blue-600 text-white border-r-4 border-blue-400">
+                <i class="fa-solid fa-gauge-high w-6"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">By Vehicle Type</div>
+            
+            <a href="#" class="flex items-center justify-between px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition group">
+                <div class="flex items-center"><i class="fa-solid fa-car w-6 text-slate-400 group-hover:text-white"></i> Private Car</div>
+                <span class="bg-slate-700 text-xs py-0.5 px-2 rounded-full">350</span>
+            </a>
+            <a href="#" class="flex items-center justify-between px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition group">
+                <div class="flex items-center"><i class="fa-solid fa-taxi w-6 text-slate-400 group-hover:text-white"></i> Commercial</div>
+                <span class="bg-slate-700 text-xs py-0.5 px-2 rounded-full">120</span>
+            </a>
+            <a href="#" class="flex items-center justify-between px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition group">
+                <div class="flex items-center"><i class="fa-solid fa-bus w-6 text-slate-400 group-hover:text-white"></i> Bus</div>
+                <span class="bg-slate-700 text-xs py-0.5 px-2 rounded-full">45</span>
+            </a>
+            <a href="#" class="flex items-center justify-between px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition group">
+                <div class="flex items-center"><i class="fa-solid fa-truck w-6 text-slate-400 group-hover:text-white"></i> Truck</div>
+                <span class="bg-slate-700 text-xs py-0.5 px-2 rounded-full">80</span>
+            </a>
+            <a href="#" class="flex items-center justify-between px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition group">
+                <div class="flex items-center"><i class="fa-solid fa-motorcycle w-6 text-slate-400 group-hover:text-white"></i> Two-wheeler</div>
+                <span class="bg-slate-700 text-xs py-0.5 px-2 rounded-full">410</span>
+            </a>
+            <a href="#" class="flex items-center justify-between px-6 py-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition group">
+                <div class="flex items-center"><i class="fa-solid fa-van-shuttle w-6 text-slate-400 group-hover:text-white"></i> Other Commercial</div>
+                <span class="bg-slate-700 text-xs py-0.5 px-2 rounded-full">195</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">By Customer</div>
+            <div class="px-6 mb-4">
+                <div class="relative group">
+                    <input type="text" placeholder="Search Client..." class="w-full bg-slate-800 text-sm text-white rounded border border-slate-700 py-2 pl-8 pr-2 focus:outline-none focus:border-blue-500 transition-colors">
+                    <i class="fa-solid fa-search absolute left-2.5 top-2.5 text-slate-500 text-xs group-focus-within:text-blue-500"></i>
+                    
+                    <!-- Dropdown simulation -->
+                    <div class="hidden group-focus-within:block absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded shadow-lg z-50 max-h-40 overflow-y-auto">
+                        <div class="px-3 py-2 hover:bg-slate-700 cursor-pointer text-sm text-slate-300">John Doe (3 vehicles)</div>
+                        <div class="px-3 py-2 hover:bg-slate-700 cursor-pointer text-sm text-slate-300">Fatah Digital (5 vehicles)</div>
+                        <div class="px-3 py-2 hover:bg-slate-700 cursor-pointer text-sm text-slate-300">M.A. Engineering (2 vehicles)</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="p-4 border-t border-slate-700">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold text-sm">A</div>
+                <div class="text-sm">
+                    <p class="font-semibold">Admin User</p>
+                    <p class="text-xs text-slate-400 cursor-pointer hover:text-white">Logout</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shadow-sm z-10 flex-shrink-0">
+            <h1 class="text-xl font-bold text-gray-800">Dashboard Overview</h1>
+            
+            <div class="flex gap-3">
+                <button class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium transition shadow-sm">
+                    <i class="fa-solid fa-file-excel"></i> Import Excel
+                </button>
+                <button class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition shadow-sm">
+                    <i class="fa-solid fa-plus"></i> Add Vehicle
+                </button>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="flex-1 overflow-auto p-6 bg-gray-50">
+            
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 flex items-center justify-between hover:shadow-md transition">
+                    <div>
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Total Vehicles</p>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1">1,200</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                        <i class="fa-solid fa-car text-xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 rounded-lg shadow-sm border border-yellow-200 p-5 flex items-center justify-between hover:shadow-md transition cursor-pointer ring-2 ring-transparent hover:ring-yellow-300">
+                    <div>
+                        <p class="text-xs font-bold text-yellow-700 uppercase tracking-wide">Expiring (5 Days)</p>
+                        <h3 class="text-2xl font-bold text-yellow-800 mt-1">12</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                        <i class="fa-solid fa-clock text-xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 rounded-lg shadow-sm border border-red-200 p-5 flex items-center justify-between hover:shadow-md transition cursor-pointer ring-2 ring-transparent hover:ring-red-300">
+                    <div>
+                        <p class="text-xs font-bold text-red-700 uppercase tracking-wide">Already Expired</p>
+                        <h3 class="text-2xl font-bold text-red-800 mt-1">5</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                        <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 flex items-center justify-between hover:shadow-md transition">
+                    <div>
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Total Clients</p>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1">400</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                        <i class="fa-solid fa-users text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Required Section -->
+            <div class="space-y-8">
+                
+                <!-- Expired Documents Table -->
+                <div class="bg-white rounded-lg shadow border border-red-200 overflow-hidden">
+                    <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex justify-between items-center">
+                        <h2 class="text-red-800 font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-circle-exclamation"></i> Already Expired Documents
+                        </h2>
+                        <span class="bg-red-200 text-red-800 text-xs font-bold px-2 py-1 rounded-full">5 Vehicles</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full excel-table">
+                            <thead>
+                                <tr>
+                                    <th class="sticky-col-left bg-gray-50 w-10"><input type="checkbox"></th>
+                                    <th class="sticky-col-left-2 bg-gray-50 w-24">Actions</th>
+                                    <th>Vehicle No</th>
+                                    <th>Client Name</th>
+                                    <th>Mobile</th>
+                                    <th>Type</th>
+                                    <th>RC Expiry</th>
+                                    <th>TP Insurance</th>
+                                    <th>Comp. Insurance</th>
+                                    <th>PUC (Petrol)</th>
+                                    <th>PUC (Diesel)</th>
+                                    <th>Fitness (New)</th>
+                                    <th>Fitness (5yr+)</th>
+                                    <th>Permit (State)</th>
+                                    <th>Permit (India)</th>
+                                    <th>Tax</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="row-expired">
+                                    <td class="sticky-col-left text-center row-expired"><input type="checkbox"></td>
+                                    <td class="sticky-col-left-2 row-expired text-center">
+                                        <button onclick="openModal('GJ01AB1234', 'John Doe')" class="text-blue-600 hover:text-blue-800 mr-3" title="Send Reminder"><i class="fa-brands fa-whatsapp text-lg"></i></button>
+                                        <button class="text-gray-600 hover:text-gray-800" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                    </td>
+                                    <td class="font-bold">GJ01AB1234</td>
+                                    <td>John Doe</td>
+                                    <td>9876543210</td>
+                                    <td>Private Car</td>
+                                    <td class="text-red-700 font-bold border-red-300">12-12-2025</td> 
+                                    <td>15-01-2026</td>
+                                    <td>15-01-2026</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td>20-02-2026</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td>01-01-2026</td>
+                                </tr>
+                                <!-- More expired rows would go here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Upcoming Expiry Table -->
+                <div class="bg-white rounded-lg shadow border border-yellow-200 overflow-hidden">
+                    <div class="bg-yellow-50 px-6 py-4 border-b border-yellow-100 flex justify-between items-center">
+                        <h2 class="text-yellow-800 font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-clock"></i> Expiring Within 5 Days
+                        </h2>
+                        <span class="bg-yellow-200 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full">12 Vehicles</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full excel-table">
+                            <thead>
+                                <tr>
+                                    <th class="sticky-col-left bg-gray-50 w-10"><input type="checkbox"></th>
+                                    <th class="sticky-col-left-2 bg-gray-50 w-24">Actions</th>
+                                    <th>Vehicle No</th>
+                                    <th>Client Name</th>
+                                    <th>Mobile</th>
+                                    <th>Type</th>
+                                    <th>RC Expiry</th>
+                                    <th>TP Insurance</th>
+                                    <th>Comp. Insurance</th>
+                                    <th>PUC (Petrol)</th>
+                                    <th>PUC (Diesel)</th>
+                                    <th>Fitness (New)</th>
+                                    <th>Fitness (5yr+)</th>
+                                    <th>Permit (State)</th>
+                                    <th>Permit (India)</th>
+                                    <th>Tax</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="row-expiring-soon">
+                                    <td class="sticky-col-left text-center row-expiring-soon"><input type="checkbox"></td>
+                                    <td class="sticky-col-left-2 row-expiring-soon text-center">
+                                        <button onclick="openModal('MH02XY9999', 'Fatah Digital')" class="text-blue-600 hover:text-blue-800 mr-3"><i class="fa-brands fa-whatsapp text-lg"></i></button>
+                                        <button class="text-gray-600 hover:text-gray-800" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                    </td>
+                                    <td class="font-bold">MH02XY9999</td>
+                                    <td>Fatah Digital</td>
+                                    <td>9988776655</td>
+                                    <td>Truck</td>
+                                    <td>18-12-2025</td> 
+                                    <td class="text-red-600 font-bold border-red-300">20-12-2025</td> 
+                                    <td>20-06-2026</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td>30-01-2026</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td>15-03-2026</td>
+                                    <td>01-04-2026</td>
+                                    <td>01-04-2026</td>
+                                    <td>01-01-2026</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- All Vehicles Table (Collapsible or Main View) -->
+                <div class="bg-white rounded-lg shadow border border-gray-200 flex flex-col h-[600px]">
+                    <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+                        <div class="flex items-center gap-4">
+                            <h2 class="font-bold text-gray-700">All Vehicles</h2>
+                            <div class="relative">
+                                <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                                <input type="text" placeholder="Search vehicle, client..." class="pl-9 pr-4 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 w-64">
+                            </div>
+                            <select class="border border-gray-300 rounded text-sm py-2 px-3 bg-white focus:outline-none focus:border-blue-500">
+                                <option>Filter by Status</option>
+                                <option>All</option>
+                                <option>Expired</option>
+                                <option>Upcoming</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="text-red-600 hover:bg-red-50 px-3 py-2 rounded text-sm font-medium transition border border-transparent hover:border-red-200">
+                                <i class="fa-solid fa-trash-can mr-1"></i> Bulk Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 overflow-auto">
+                        <table class="w-full excel-table border-collapse">
+                            <thead class="sticky top-0 z-20 shadow-sm">
+                                <tr>
+                                    <th class="sticky-col-left bg-gray-100 w-10"><input type="checkbox"></th>
+                                    <th class="sticky-col-left-2 bg-gray-100 w-24">Actions</th>
+                                    <th>Vehicle No</th>
+                                    <th>Client Name</th>
+                                    <th>Mobile</th>
+                                    <th>Type</th>
+                                    <th>RC Expiry</th>
+                                    <th>TP Insurance</th>
+                                    <th>Comp. Insurance</th>
+                                    <th>PUC (Petrol)</th>
+                                    <th>PUC (Diesel)</th>
+                                    <th>Fitness (New)</th>
+                                    <th>Fitness (5yr+)</th>
+                                    <th>Permit (State)</th>
+                                    <th>Permit (India)</th>
+                                    <th>Tax</th>
+                                    <!-- Extra columns from spec -->
+                                    <th>Driving Lic.</th>
+                                    <th>Route Permit</th>
+                                    <th>Conductor Lic.</th>
+                                    <th>Plate Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Example Rows -->
+                                <tr class="bg-white hover:bg-blue-50 transition-colors">
+                                    <td class="sticky-col-left text-center bg-inherit"><input type="checkbox"></td>
+                                    <td class="sticky-col-left-2 bg-inherit text-center">
+                                        <button class="text-blue-600 hover:text-blue-800 mr-3"><i class="fa-brands fa-whatsapp text-lg"></i></button>
+                                        <button class="text-gray-600 hover:text-gray-800" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                    </td>
+                                    <td class="font-bold" ondblclick="makeEditable(this)">GJ04MK5555</td>
+                                    <td ondblclick="makeEditable(this)">M.A. Engineering</td>
+                                    <td ondblclick="makeEditable(this)">9123456789</td>
+                                    <td>Two-wheeler</td>
+                                    <td ondblclick="makeEditable(this)">15-05-2026</td> 
+                                    <td ondblclick="makeEditable(this)">15-05-2026</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td ondblclick="makeEditable(this)">20-05-2026</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td ondblclick="makeEditable(this)">01-08-2026</td>
+                                    <td ondblclick="makeEditable(this)">10-10-2028</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td class="cell-na">N/A</td>
+                                    <td>OK</td>
+                                </tr>
+                                <!-- More rows... -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-3 border-t border-gray-200 bg-gray-50 flex justify-between items-center text-xs text-gray-500">
+                        <span>Showing 1 to 50 of 1200 entries</span>
+                        <div class="flex gap-1">
+                            <button class="px-3 py-1 border rounded bg-white hover:bg-gray-100">Previous</button>
+                            <button class="px-3 py-1 border rounded bg-blue-600 text-white">1</button>
+                            <button class="px-3 py-1 border rounded bg-white hover:bg-gray-100">2</button>
+                            <button class="px-3 py-1 border rounded bg-white hover:bg-gray-100">3</button>
+                            <button class="px-3 py-1 border rounded bg-white hover:bg-gray-100">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Reminder Modal -->
+    <div id="reminderModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100">
+            <div class="bg-blue-600 px-6 py-4 flex justify-between items-center">
+                <h3 class="text-white font-bold text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Send Manual Reminder
+                </h3>
+                <button onclick="closeModal()" class="text-blue-200 hover:text-white transition"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-6">
+                <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-5 text-sm text-blue-900 flex flex-col gap-1">
+                    <div class="flex justify-between">
+                        <span class="font-semibold text-blue-700">Client Name:</span>
+                        <span id="modalClientName" class="font-medium">...</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-semibold text-blue-700">Vehicle No:</span>
+                        <span id="modalVehicleNo" class="font-medium">...</span>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Select Expiring Document(s):</label>
+                    <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-200 p-3 rounded-md bg-gray-50">
+                        <label class="flex items-center space-x-3 p-2 hover:bg-white rounded cursor-pointer transition">
+                            <input type="checkbox" checked class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                            <span class="text-sm text-gray-700">Third Party Insurance <span class="text-red-500 text-xs font-bold ml-1">(Expires: 20-12-2025)</span></span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-2 hover:bg-white rounded cursor-pointer transition">
+                            <input type="checkbox" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                            <span class="text-sm text-gray-700">PUC Diesel <span class="text-red-500 text-xs font-bold ml-1">(Expires: 21-12-2025)</span></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Message Preview (Editable):</label>
+                    <div class="relative">
+                        <textarea class="w-full border border-gray-300 rounded-md p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition shadow-sm" rows="4">Dear Client, your vehicle GJ01AB1234 Third Party Insurance expires on 20-12-2025. Please contact us for renewal. - Shree Krupa PUC Centre</textarea>
+                        <div class="absolute bottom-2 right-2 text-xs text-gray-400">145 chars</div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2 border-t border-gray-100">
+                    <button onclick="closeModal()" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-md text-sm font-medium transition">Cancel</button>
+                    <button class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium flex items-center gap-2 shadow-sm transition transform active:scale-95">
+                        <i class="fa-brands fa-whatsapp"></i> Send SMS & WhatsApp
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Vehicle Modal -->
+    <div id="editVehicleModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl overflow-hidden transform transition-all scale-100 max-h-[90vh] flex flex-col">
+            <div class="bg-gray-800 px-6 py-4 flex justify-between items-center">
+                <h3 class="text-white font-bold text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit Vehicle Details
+                </h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1">
+                <form id="editVehicleForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Basic Info -->
+                    <div class="col-span-1 md:col-span-3 border-b pb-2 mb-2">
+                        <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Basic Information</h4>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Vehicle Number</label>
+                        <input type="text" id="editVehicleNo" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Client Name</label>
+                        <input type="text" id="editClientName" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Mobile Number</label>
+                        <input type="text" id="editMobile" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Vehicle Type</label>
+                        <select id="editVehicleType" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-white">
+                            <option>Private Car</option>
+                            <option>Commercial Car</option>
+                            <option>Bus</option>
+                            <option>Truck</option>
+                            <option>Two-wheeler</option>
+                            <option>Other Commercial</option>
+                        </select>
+                    </div>
+
+                    <!-- Document Expiry Dates -->
+                    <div class="col-span-1 md:col-span-3 border-b pb-2 mb-2 mt-4">
+                        <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Document Expiry Dates</h4>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">RC Expiry</label>
+                        <input type="date" id="editRC" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">TP Insurance</label>
+                        <input type="date" id="editTP" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Comp. Insurance</label>
+                        <input type="date" id="editComp" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">PUC (Petrol)</label>
+                        <input type="date" id="editPUCPetrol" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">PUC (Diesel)</label>
+                        <input type="date" id="editPUCDiesel" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Fitness (New)</label>
+                        <input type="date" id="editFitNew" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Fitness (5yr+)</label>
+                        <input type="date" id="editFitOld" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Permit (State)</label>
+                        <input type="date" id="editPermitState" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Permit (India)</label>
+                        <input type="date" id="editPermitIndia" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Tax</label>
+                        <input type="date" id="editTax" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Driving Lic.</label>
+                        <input type="date" id="editDrivingLic" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Route Permit</label>
+                        <input type="date" id="editRoutePermit" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Conductor Lic.</label>
+                        <input type="date" id="editConductorLic" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Plate Status</label>
+                        <select id="editPlateStatus" class="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none bg-white">
+                            <option>OK</option>
+                            <option>Damaged</option>
+                            <option>Missing</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button onclick="closeEditModal()" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-md text-sm font-medium transition">Cancel</button>
+                <button onclick="saveVehicleChanges()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium flex items-center gap-2 shadow-sm transition">
+                    <i class="fa-solid fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Reminder Modal Logic ---
+        function openModal(vehicleNo, clientName) {
+            document.getElementById('modalVehicleNo').innerText = vehicleNo;
+            document.getElementById('modalClientName').innerText = clientName;
+            document.getElementById('reminderModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('reminderModal').classList.add('hidden');
+        }
+
+        // --- Edit Vehicle Modal Logic ---
+        function openEditModal(btn) {
+            const row = btn.closest('tr');
+            const cells = row.querySelectorAll('td');
+            
+            // Map cells to form fields (Assuming column order matches)
+            // 0: Checkbox, 1: Actions, 2: VehicleNo, 3: Client, 4: Mobile, 5: Type, 6: RC...
+            
+            document.getElementById('editVehicleNo').value = cells[2].innerText;
+            document.getElementById('editClientName').value = cells[3].innerText;
+            document.getElementById('editMobile').value = cells[4].innerText;
+            document.getElementById('editVehicleType').value = cells[5].innerText;
+            
+            // Helper to parse date DD-MM-YYYY to YYYY-MM-DD for input[type=date]
+            const parseDate = (text) => {
+                if(!text || text.trim() === 'N/A') return '';
+                const parts = text.trim().split('-');
+                if(parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                return '';
+            };
+
+            document.getElementById('editRC').value = parseDate(cells[6].innerText);
+            document.getElementById('editTP').value = parseDate(cells[7].innerText);
+            document.getElementById('editComp').value = parseDate(cells[8].innerText);
+            document.getElementById('editPUCPetrol').value = parseDate(cells[9].innerText);
+            document.getElementById('editPUCDiesel').value = parseDate(cells[10].innerText);
+            document.getElementById('editFitNew').value = parseDate(cells[11].innerText);
+            document.getElementById('editFitOld').value = parseDate(cells[12].innerText);
+            document.getElementById('editPermitState').value = parseDate(cells[13].innerText);
+            document.getElementById('editPermitIndia').value = parseDate(cells[14].innerText);
+            document.getElementById('editTax').value = parseDate(cells[15].innerText);
+
+            // Handle extra columns if they exist
+            if(cells.length > 16) {
+                 document.getElementById('editDrivingLic').value = parseDate(cells[16].innerText);
+                 document.getElementById('editRoutePermit').value = parseDate(cells[17].innerText);
+                 document.getElementById('editConductorLic').value = parseDate(cells[18].innerText);
+                 document.getElementById('editPlateStatus').value = cells[19].innerText;
+            } else {
+                 // Clear if not present (e.g. in summary tables)
+                 document.getElementById('editDrivingLic').value = '';
+                 document.getElementById('editRoutePermit').value = '';
+                 document.getElementById('editConductorLic').value = '';
+                 document.getElementById('editPlateStatus').value = 'OK';
+            }
+
+            document.getElementById('editVehicleModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editVehicleModal').classList.add('hidden');
+        }
+
+        function saveVehicleChanges() {
+            // In a real app, this would send data to backend
+            // For now, we just close the modal
+            alert('Changes saved successfully!');
+            closeEditModal();
+        }
+
+        // --- Inline Edit Logic ---
+        function makeEditable(td) {
+            if (td.querySelector('input')) return; // Already editable
+            if (td.classList.contains('cell-na')) return; // Don't edit N/A cells easily (optional)
+            
+            const currentValue = td.innerText;
+            const input = document.createElement('input');
+            
+            // Check if it looks like a date
+            const isDate = /^\d{2}-\d{2}-\d{4}$/.test(currentValue.trim());
+            
+            if (isDate) {
+                // Convert DD-MM-YYYY to YYYY-MM-DD for input
+                const parts = currentValue.trim().split('-');
+                input.type = 'date';
+                input.value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            } else {
+                input.type = 'text';
+                input.value = currentValue;
+            }
+            
+            input.className = 'w-full h-full bg-transparent outline-none font-inherit p-0 m-0';
+            
+            // Save on blur or enter
+            const save = () => {
+                if (input.type === 'date') {
+                    // Convert back to DD-MM-YYYY
+                    if (input.value) {
+                        const parts = input.value.split('-');
+                        td.innerText = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                    } else {
+                        td.innerText = currentValue; // Revert if empty or handle clear
+                    }
+                } else {
+                    td.innerText = input.value;
+                }
+            };
+
+            input.onblur = save;
+            input.onkeydown = function(e) {
+                if(e.key === 'Enter') {
+                    this.blur();
+                }
+            };
+
+            td.innerText = '';
+            td.appendChild(input);
+            input.focus();
+        }
+
+        // Initialize listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Attach double click to all data cells
+            const tables = document.querySelectorAll('table');
+            tables.forEach(table => {
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    // Skip first 2 columns (checkbox, actions)
+                    for (let i = 2; i < cells.length; i++) {
+                        cells[i].ondblclick = function() { makeEditable(this); };
+                    }
+                });
+            });
+            
+            // Attach click to Edit buttons
+            const editBtns = document.querySelectorAll('button[title="Edit"]');
+            editBtns.forEach(btn => {
+                btn.onclick = function() { openEditModal(this); };
+            });
+        });
+    </script>
+</body>
+</html>
